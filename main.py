@@ -1,24 +1,33 @@
 import os
 import json
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field, field_validator
+from datetime import datetime, timedelta
 from typing import Dict
-from passlib.hash import argon2  
 
-app = FastAPI(title="User & Notes App")
+from fastapi import FastAPI, HTTPException, Depends, Header
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from pydantic import BaseModel, Field, field_validator
+from passlib.hash import argon2
+import jwt
 
-# Password Hashing
+# -------------------- CONFIG -------------------- #
+SECRET_KEY = "your_super_secret_key_here"  # use env variable in production
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
+
+app = FastAPI(title="User & Notes App with JWT Auth")
+security = HTTPBearer()
+
+# -------------------- PASSWORD HASHING -------------------- #
 def hash_password(password: str) -> str:
-    return argon2.hash(password)  # no need to truncate
+    return argon2.hash(password)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return argon2.verify(plain_password, hashed_password)
 
-# JSON File 
+# -------------------- JSON FILE -------------------- #
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_FILE = os.path.join(BASE_DIR, "data.json")
 
-# Helpers
 def load_data() -> Dict:
     if not os.path.exists(DATA_FILE):
         return {}
@@ -32,13 +41,46 @@ def save_data(data: Dict):
     with open(DATA_FILE, "w") as f:
         json.dump(data, f, indent=4)
 
+# -------------------- JWT UTILITIES -------------------- #
+def create_access_token(username: str) -> str:
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    payload = {"sub": username, "exp": expire.timestamp()}
+    token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+    # Save token to user's record in JSON
+    data = load_data()
+    if username in data:
+        data[username]["token"] = token
+        save_data(data)
+    return token
+
+def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)) -> str:
+    token = credentials.credentials
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username = payload.get("sub")
+        if not username:
+            raise HTTPException(status_code=401, detail="Invalid token")
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.PyJWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    # Check token matches stored token
+    data = load_data()
+    user = data.get(username)
+    if not user or user.get("token") != token:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    return username
+
+# -------------------- AUTHENTICATION -------------------- #
 def authenticate_user(username: str, password: str, data: Dict):
     user = data.get(username)
     if not user or not verify_password(password, user["password"]):
         raise HTTPException(status_code=401, detail="Username or password is incorrect")
     return user
 
-# Pydantic Models 
+# -------------------- Pydantic Models -------------------- #
 class UserBase(BaseModel):
     username: str = Field(..., min_length=3)
 
@@ -60,69 +102,76 @@ class UserAuth(UserBase):
             raise ValueError("Password must contain at least one symbol")
         return v
 
-class NoteRequest(BaseModel):
+class UserLogin(BaseModel):
     username: str
     password: str
+
+class NoteRequest(BaseModel):
     note: str
 
 class UpdateNoteRequest(BaseModel):
-    username: str
-    password: str
     note_index: int
     note: str
 
 class UpdatePasswordRequest(BaseModel):
-    username: str
     old_password: str
     new_password: str
 
 class DeleteRequest(BaseModel):
-    username: str
-    password: str
     delete_type: str  # 'notes' or 'user'
 
-# Endpoints
+# -------------------- ENDPOINTS -------------------- #
+
 @app.post("/register")
 def register(user: UserAuth):
     data = load_data()
     if user.username in data:
         raise HTTPException(status_code=400, detail="Username already exists")
     hashed_pwd = hash_password(user.password)
-    data[user.username] = {"password": hashed_pwd, "notes": []}
+    data[user.username] = {"password": hashed_pwd, "notes": [], "token": None}
     save_data(data)
     return {"message": "User registered successfully"}
 
-@app.post("/notes/add")
-def add_note(req: NoteRequest):
+@app.post("/login")
+def login(user: UserLogin):
     data = load_data()
-    user = authenticate_user(req.username, req.password, data)
+    auth_user = authenticate_user(user.username, user.password, data)
+    token = create_access_token(user.username)
+    return {"access_token": token, "token_type": "bearer"}
+
+@app.post("/notes/add")
+def add_note(req: NoteRequest, username: str = Depends(verify_token)):
+    data = load_data()
+    user = data[username]
     user["notes"].append(req.note)
     save_data(data)
     return {"message": "Note added successfully"}
 
 @app.get("/notes")
-def get_notes(username: str, password: str):
+def get_notes(username: str = Depends(verify_token)):
     data = load_data()
-    user = authenticate_user(username, password, data)
+    user = data[username]
     return {"notes": user["notes"]}
 
 @app.delete("/delete")
-def delete(req: DeleteRequest):
+def delete(req: DeleteRequest, username: str = Depends(verify_token)):
     data = load_data()
-    user = authenticate_user(req.username, req.password, data)
+    user = data[username]
     if req.delete_type == "notes":
         user["notes"] = []
     elif req.delete_type == "user":
-        del data[req.username]
+        del data[username]
     else:
         raise HTTPException(status_code=400, detail="Invalid delete_type. Use 'notes' or 'user'")
     save_data(data)
     return {"message": f"{req.delete_type.capitalize()} deleted successfully"}
 
 @app.put("/update/password")
-def update_password(req: UpdatePasswordRequest):
+def update_password(req: UpdatePasswordRequest, username: str = Depends(verify_token)):
     data = load_data()
-    user = authenticate_user(req.username, req.old_password, data)
+    user = data[username]
+    if not verify_password(req.old_password, user["password"]):
+        raise HTTPException(status_code=401, detail="Old password is incorrect")
     if len(req.new_password) < 8 or not any(char.isdigit() for char in req.new_password) or \
        not any(char in "!@#$%^&*(),.?\":{}|<>" for char in req.new_password):
         raise HTTPException(status_code=400, detail="Password must be 8+ chars, include number & symbol")
@@ -131,9 +180,9 @@ def update_password(req: UpdatePasswordRequest):
     return {"message": "Password updated successfully"}
 
 @app.put("/update/note")
-def update_note(req: UpdateNoteRequest):
+def update_note(req: UpdateNoteRequest, username: str = Depends(verify_token)):
     data = load_data()
-    user = authenticate_user(req.username, req.password, data)
+    user = data[username]
     if req.note_index < 0 or req.note_index >= len(user["notes"]):
         raise HTTPException(status_code=400, detail="Invalid note index")
     user["notes"][req.note_index] = req.note
