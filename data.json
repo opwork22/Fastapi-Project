@@ -16,6 +16,11 @@
         "notes": [
             "notes in the 1st line"
         ],
-        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJvbXAiLCJleHAiOjE3NzI2MTA4OTJ9.-5-qUUYs8hxrXuSAt2pSriOq2avCxjFx8Qji8huKh_g"
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJvbXAiLCJleHAiOjE3NzI2MjQ3NDR9.7J4Xb0D1NCxnhnvI4vT6GVo5tvHaKmA7SvKP0nXuN20"
+    },
+    "uday": {
+        "password": "$argon2id$v=19$m=65536,t=3,p=4$3lurdY5RCiHkXGstxXivdQ$WugYPE+SAgOF+wHQAxDhizBVRsx7P3Ns6kiiHmSKNnw",
+        "notes": [],
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1ZGF5IiwiZXhwIjoxNzcyNjI4MzMxfQ.1WaVrBg5gsP7oK0o_6Ots4pQKLtPGSX8t2M3bKeXxAs"
     }
 }
