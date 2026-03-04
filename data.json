@@ -5,16 +5,17 @@
             "This are the notes of the ram user.This are the saved notes."
         ]
     },
-    "omp": {
-        "password": "$argon2id$v=19$m=65536,t=3,p=4$UmrN+d/7PwcAICTknHOuVQ$FPgvk2jaZYBgLvvFaG/4nwu9lyA305RJKsnRP0/L4yQ",
-        "notes": [
-            "This are the notes of the user omp,this notes are stored."
-        ]
-    },
     "sham": {
         "password": "$argon2id$v=19$m=65536,t=3,p=4$t/aeE4LQOgfgfE/J2Vvr3Q$C+ThEWtRQt5YsvtaG7BxCjZWsd1pflJY/4czggeD6g4",
         "notes": [
             "This are the notes of sham."
         ]
+    },
+    "omp": {
+        "password": "$argon2id$v=19$m=65536,t=3,p=4$yNn7P0fI+V+r1fr/H8PY2w$ZegPJclyDDvcjN+BmHLGj6sQ0fSEpzr6Dq3EvBaeOPA",
+        "notes": [
+            "notes in the 1st line"
+        ],
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJvbXAiLCJleHAiOjE3NzI2MTA4OTJ9.-5-qUUYs8hxrXuSAt2pSriOq2avCxjFx8Qji8huKh_g"
     }
 }

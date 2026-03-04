@@ -1,5 +1,5 @@
 fastapi
-uvicorn
-pydantic
-passlib[argon2]
-argon2-cffi
+uvicorn[standard]
+passlib[bcrypt]==1.7.4
+PyJWT==2.8.0
+pydantic==2.6.0
