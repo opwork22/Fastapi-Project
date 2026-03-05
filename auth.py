@@ -1,15 +1,16 @@
-import os
 from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from passlib.hash import argon2
 import jwt
 from datetime import datetime, timedelta
+from sqlalchemy.orm import Session
 
-from database import load_data, save_data
+from database import get_db
+from models import User
 
-SECRET_KEY = "your_super_secret_key_here"
+SECRET_KEY = "Thekey"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+ACCESS_TOKEN_EXPIRE_MINUTES = 1
 
 security = HTTPBasic()
 
@@ -45,23 +46,22 @@ def decode_access_token(token: str):
         raise HTTPException(status_code=401, detail="Invalid token")
 
 
-def authenticate_user(credentials: HTTPBasicCredentials = Depends(security)):
+def authenticate_user(
+    credentials: HTTPBasicCredentials = Depends(security),
+    db: Session = Depends(get_db)
+):
 
     username = credentials.username
     password = credentials.password
 
-    data = load_data()
-    user = data.get(username)
+    user = db.query(User).filter(User.username == username).first()
 
-    if not user or not verify_password(password, user["password"]):
+    if not user or not verify_password(password, user.password):
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
-    token = user.get("token")
-
-    if not token:
+    if not user.token:
         token = create_access_token(username)
-        user["token"] = token
-        data[username] = user
-        save_data(data)
+        user.token = token
+        db.commit()
 
-    return username, user
+    return user

@@ -1,9 +1,12 @@
-import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from notes import router
+from database import Base, engine
 
 app = FastAPI(title="User Notes API")
+
+Base.metadata.create_all(bind=engine)
 
 app.add_middleware(
     CORSMiddleware,

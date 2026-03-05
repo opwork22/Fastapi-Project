@@ -11,13 +11,6 @@
             "This are the notes of sham."
         ]
     },
-    "omp": {
-        "password": "$argon2id$v=19$m=65536,t=3,p=4$yNn7P0fI+V+r1fr/H8PY2w$ZegPJclyDDvcjN+BmHLGj6sQ0fSEpzr6Dq3EvBaeOPA",
-        "notes": [
-            "notes in the 1st line"
-        ],
-        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJvbXAiLCJleHAiOjE3NzI2MjQ3NDR9.7J4Xb0D1NCxnhnvI4vT6GVo5tvHaKmA7SvKP0nXuN20"
-    },
     "uday": {
         "password": "$argon2id$v=19$m=65536,t=3,p=4$3lurdY5RCiHkXGstxXivdQ$WugYPE+SAgOF+wHQAxDhizBVRsx7P3Ns6kiiHmSKNnw",
         "notes": [],

@@ -1,23 +1,22 @@
-import os
-import json
-from typing import Dict
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_FILE = os.path.join(BASE_DIR, "data.json")
+DATABASE_URL = "postgresql://fastapi_user:strongpassword@localhost/fastapi_db"
 
+engine = create_engine(DATABASE_URL)
 
-def load_data() -> Dict:
-    if not os.path.exists(DATA_FILE):
-        return {}
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
+)
 
-    with open(DATA_FILE, "r") as f:
-        content = f.read().strip()
-        if not content:
-            return {}
-
-        return json.loads(content)
+Base = declarative_base()
 
 
-def save_data(data: Dict):
-    with open(DATA_FILE, "w") as f:
-        json.dump(data, f, indent=4)
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
