@@ -6,7 +6,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 DATABASE_URL = "postgresql://fastapi_user:strongpassword@localhost/fastapi_db"
 
-engine = create_engine(DATABASE_URL)
+engine = create_engine(DATABASE_URL) #The engine is the connection to PostgreSQL.
 
 SessionLocal = sessionmaker(
     autocommit=False,

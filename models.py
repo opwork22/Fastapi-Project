@@ -30,7 +30,7 @@ class Note(Base):
 # -------- Pydantic Schemas --------
 
 class RegisterRequest(BaseModel):
-    username: str = Field(..., min_length=3)
+    username: str = Field(..., min_length=2)
     password: str = Field(..., min_length=8)
 
     @field_validator("username")

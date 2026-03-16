@@ -4,9 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from notes import router
 from database import Base, engine
 
-app = FastAPI(title="User Notes API")
+app = FastAPI(title="User Notes API") #title of the web
 
-Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine) #
 
 app.add_middleware(
     CORSMiddleware,
@@ -16,4 +16,4 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(router)
+app.include_router(router) #load all routes from notes.py

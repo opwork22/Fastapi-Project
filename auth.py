@@ -10,7 +10,7 @@ from models import User
 
 SECRET_KEY = "Thekey"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 1
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 security = HTTPBasic()
 
